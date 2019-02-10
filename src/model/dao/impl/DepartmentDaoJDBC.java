@@ -27,13 +27,13 @@ public class DepartmentDaoJDBC implements DepartmentDao {
 		ResultSet rs = null;
 		try {
 			st = conn.prepareStatement("INSERT INTO department (Name) VALUES (?)", Statement.RETURN_GENERATED_KEYS);
-			st.setInt(1, department.getId());
+			st.setString(1, department.getName());
 			
 			int rowsAffected = st.executeUpdate();
 			if (rowsAffected > 0) {
 				rs = st.getGeneratedKeys();
 				if (rs.next()) {
-					int id = rs.getInt(0);
+					int id = rs.getInt(1);
 					department.setId(id);
 				} 
 			} else {
