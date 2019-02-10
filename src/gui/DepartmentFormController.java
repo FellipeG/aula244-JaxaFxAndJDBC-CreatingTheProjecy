@@ -3,7 +3,9 @@ package gui;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import db.DbException;
 import gui.listeners.DataChangeListener;
@@ -18,6 +20,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import model.entities.Department;
+import model.exceptions.ValidationException;
 import model.services.DepartmentService;
 
 public class DepartmentFormController implements Initializable {
@@ -77,6 +80,9 @@ public class DepartmentFormController implements Initializable {
 			notifyDataChangeListeners();
 			Utils.currentStage(event).close();
 		}
+		catch(ValidationException e) {
+			setErrorMessages(e.getErrors());
+		}
 		catch(DbException e) {
 			Alerts.showAlert("Error saving objects", null, e.getMessage(), AlertType.ERROR);
 		}
@@ -90,7 +96,19 @@ public class DepartmentFormController implements Initializable {
 	}
 
 	private Department getFormData() {
-		Department department = new Department(Utils.tryParseToInt(textFieldId.getText()), textFieldName.getText());
+		Department department = new Department();
+		department.setId(Utils.tryParseToInt(textFieldId.getText()));
+		ValidationException exception = new ValidationException("Validation error");
+		
+		if (textFieldName.getText() == null || textFieldName.getText().trim().equals("")) {
+			exception.addError("name", "Field can't be empty");
+		}
+		department.setName(textFieldName.getText());
+		
+		if(exception.getErrors().size() > 0) {
+			throw exception;
+		}
+		
 		return department;
 	}
 
@@ -107,5 +125,13 @@ public class DepartmentFormController implements Initializable {
 	private void initializeNodes() {
 		Constraints.setTextFieldInteger(textFieldId);
 		Constraints.setTextFieldMaxLenght(textFieldName, 30);
+	}
+	
+	private void setErrorMessages(Map<String, String> errors) {
+		Set<String> key = errors.keySet();
+		
+		if (key.contains("name")) {
+			labelError.setText(errors.get("name"));
+		}
 	}
 }
